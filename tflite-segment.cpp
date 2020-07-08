@@ -62,7 +62,9 @@ bool segmentPath(const char *pchSrcPath,const char *pchMaskPath)
 	bool bRet = true;
 	Mat src = imread(pchSrcPath);
 	Mat mask;
-	segmentMat(src, mask);
+	for(int i = 0 ; i < 1000 ; i ++ )
+		segmentMat(src, mask);
+	
 	if (mask.empty())
 		bRet = false;
 	//else

@@ -27,7 +27,7 @@ struct SegmentationResult
 	}
 };
 
-#define USE_GPU_DELEGATEV2 
+//#define USE_GPU_DELEGATEV2 
 
 class ImageSegmentation
 {
