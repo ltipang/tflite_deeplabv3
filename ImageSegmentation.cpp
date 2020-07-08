@@ -109,6 +109,8 @@ bool ImageSegmentation::segmentImage(Mat src, Mat& result){
 	int origWidth = src.cols;
 	int origHeight = src.rows;
 
+	int64 tt = getTickCount();
+
 	Mat image;
 	resize(src, image, Size(MODEL_SIZE, MODEL_SIZE), 0, 0, INTER_AREA);
 	int cnls = image.type();
@@ -137,10 +139,19 @@ bool ImageSegmentation::segmentImage(Mat src, Mat& result){
 		memcpy(dst, fimage.data,
 			sizeof(float) * MODEL_SIZE * MODEL_SIZE * MODEL_CNLS);
 	}
+
+	int64 te = getTickCount();
+	cout << "Preprocessing time: "<< (double)(te - tt)/getTickFrequency() * 1000 << endl;
+
+	tt = getTickCount();
 	if (TfLiteInterpreterInvoke(m_interpreter) != kTfLiteOk) {
 		printf("Error invoking detection model");
 		return false;
 	}
+
+	te = getTickCount();
+	cout << "Inference time: "<< (double)(te - tt)/getTickFrequency() * 1000 << endl;
+	tt = te;
 
 	const float* maskImage = m_output_mask->data.f;
 
@@ -170,5 +181,9 @@ bool ImageSegmentation::segmentImage(Mat src, Mat& result){
 	waitKey(0);
 	resize(mask, mask, Size(origWidth, origHeight), 0, 0, INTER_CUBIC);*/
 	resize(mask, result, Size(origWidth, origHeight), 0, 0, INTER_CUBIC);
+
+	te = getTickCount();
+	cout << "Postprocessing time: "<< (double)(te - tt)/getTickFrequency() * 1000 << endl;
+
 	return true;
 }
