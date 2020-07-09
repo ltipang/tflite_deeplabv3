@@ -5,8 +5,16 @@
 extern "C" {
 #endif  // __cplusplus
 
+//#define USE_GPU_DELEGATEV2 
+#define USE_GL_DELEGATE
+
 #include "tensorflow/lite/c/c_api.h"
-#include "tensorflow/lite/delegates/gpu/delegate.h"
+
+#if defined(USE_GPU_DELEGATEV2)
+	#include "tensorflow/lite/delegates/gpu/delegate.h"
+#elif defined(USE_GL_DELEGATE)
+	#include "tensorflow/lite/delegates/gpu/gl_delegate.h"
+#endif
 
 #ifdef __cplusplus
 }  // extern "C"
@@ -26,8 +34,6 @@ struct SegmentationResult
 		SegmentationResult::mask = mask;
 	}
 };
-
-//#define USE_GPU_DELEGATEV2 
 
 class ImageSegmentation
 {
@@ -50,6 +56,7 @@ private:
 	const TfLiteTensor* m_output_mask = nullptr;
 
 	TfLiteDelegate *m_pDelegate = nullptr;
+
 	// Methods
 	void initModel(const char* deeplabModelPath);
 };

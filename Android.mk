@@ -37,7 +37,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := libtensorflowlite_gpu
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_MODULE_SUFFIX := .so
-LOCAL_SRC_FILES := $(LOCAL_PATH)/libtensorflowlite_gpu_delegate.so
+LOCAL_SRC_FILES := $(LOCAL_PATH)/libtensorflowlite_gpu_gl.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)

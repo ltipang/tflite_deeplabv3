@@ -22,6 +22,9 @@ ImageSegmentation::~ImageSegmentation() {
 #if defined (USE_GPU_DELEGATEV2)	
 	if( m_pDelegate != nullptr)
 		TfLiteGpuDelegateV2Delete(m_pDelegate);
+#elif defined(USE_GPU_DELEGATE)
+	if( m_pDelegate != nullptr)
+		TfLiteGpuDelegateDelete(m_pDelegate);
 #endif
 }
 
@@ -34,18 +37,39 @@ void ImageSegmentation::initModel(const char* deeplabModelPath) {
 
 	// Build the interpreter
 	TfLiteInterpreterOptions* options = TfLiteInterpreterOptionsCreate();
-	TfLiteInterpreterOptionsSetNumThreads(options, 4);
+	TfLiteInterpreterOptionsSetNumThreads(options, 4);  // If using gpu, this is not related to inference speed.
 
 	// Create gpu delegate
-#if defined (USE_GPU_DELEGATEV2)
-	TfLiteGpuDelegateOptionsV2 optDelegate = TfLiteGpuDelegateOptionsV2Default();
-    optDelegate.is_precision_loss_allowed = 1, // FP16
-    optDelegate.inference_preference = TFLITE_GPU_INFERENCE_PREFERENCE_FAST_SINGLE_ANSWER,
-	optDelegate.inference_priority1 = TFLITE_GPU_INFERENCE_PRIORITY_MIN_LATENCY,
-    optDelegate.inference_priority2 = TFLITE_GPU_INFERENCE_PRIORITY_AUTO,
-    optDelegate.inference_priority3 = TFLITE_GPU_INFERENCE_PRIORITY_AUTO,
+#if defined (USE_GL_DELEGATE)
+    const TfLiteGpuDelegateOptions optDelegate = {
+        .metadata = NULL,
+        .compile_options = {
+            .precision_loss_allowed = 1,  // FP16
+            .preferred_gl_object_type = TFLITE_GL_OBJECT_TYPE_FASTEST,
+            .dynamic_batch_enabled = 0,   // Not fully functional yet
+			//.inline_parameters = 0,
+        },
+    };
 
-    m_pDelegate = TfLiteGpuDelegateV2Create(&optDelegate);
+    m_pDelegate = TfLiteGpuDelegateCreate(&optDelegate);
+
+	if( m_pDelegate != nullptr ) {
+		TfLiteInterpreterOptionsAddDelegate(options,m_pDelegate); 
+		printf("Succeeded to create Gpu delegate!");
+	}
+	else{
+		printf("Failed to create Gpu delegate!");
+	}
+
+#elif defined(USE_GPU_DELEGATEV2)
+	TfLiteGpuDelegateOptionsV2 optDelegateV2 = TfLiteGpuDelegateOptionsV2Default();
+    optDelegateV2.is_precision_loss_allowed = 1, // FP16
+    optDelegateV2.inference_preference = TFLITE_GPU_INFERENCE_PREFERENCE_FAST_SINGLE_ANSWER,
+	optDelegateV2.inference_priority1 = TFLITE_GPU_INFERENCE_PRIORITY_MIN_LATENCY,
+    optDelegateV2.inference_priority2 = TFLITE_GPU_INFERENCE_PRIORITY_AUTO,
+    optDelegateV2.inference_priority3 = TFLITE_GPU_INFERENCE_PRIORITY_AUTO,
+
+    m_pDelegate = TfLiteGpuDelegateV2Create(&optDelegateV2);
 	// m_pDelegate = TfLiteGpuDelegateV2Create(/*default options=*/nullptr);
 	if( m_pDelegate != nullptr ) {
 		TfLiteInterpreterOptionsAddDelegate(options,m_pDelegate); 
